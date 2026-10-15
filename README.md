@@ -104,6 +104,7 @@ ParkEx/
 ├── vision/     Lector de matrículas en Java
 ├── firmware/   Sketch del sensor para Arduino Uno
 ├── db/         Esquema, funciones, políticas de seguridad y datos de prueba
+├── scripts/    Lanzador local de todos los servicios
 ├── Tinkercad/  Diagramas del circuito
 └── docs/       Documento de diseño y figuras
 ```
@@ -149,6 +150,19 @@ mayor y, para el lector de matrículas, Java 17, Maven y Tesseract.
 
 Los archivos con secretos (`api/.env`, `gateway/.env`, `vision/config.json`) no
 están en el repositorio: se crean copiando su respectivo `.example`.
+
+### Todo de una vez (Linux)
+
+Con los tres archivos de configuración completos, el lanzador verifica las
+dependencias, compila lo que falte e inicia la API, la web, el puente y el
+lector:
+
+```bash
+./scripts/iniciar-local.sh
+```
+
+Los registros quedan en `logs/` y `Ctrl+C` detiene todo. El monitor serie del
+IDE de Arduino tiene que estar cerrado para que el puente pueda abrir el puerto.
 
 ## Documentación
 

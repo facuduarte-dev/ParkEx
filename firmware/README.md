@@ -2,7 +2,7 @@
 
 Sketch de Arduino Uno para `sensor_plaza/sensor_plaza.ino`. Mide la distancia al
 piso con un HC-SR04 montado en el cielorraso, decide si la plaza está ocupada y
-lo escribe por el puerto serie. Las secciones 7.1 a 7.4 del README de la raíz
+lo escribe por el puerto serie. Las secciones 7.1 a 7.4 de [docs/DISENO.md](../docs/DISENO.md)
 explican el circuito y el protocolo; acá está cómo subirlo y calibrarlo.
 
 **El Arduino no habla con la red y no guarda ninguna credencial.** Escribe

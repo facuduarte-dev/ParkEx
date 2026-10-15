@@ -1,6 +1,6 @@
 # ============================================================
 #  SECRETOS  —  lo más importante de este archivo
-#  Cada uno se crea copiando su respectivo .example (sección 10)
+#  Cada uno se crea copiando su respectivo .example
 # ============================================================
 
 # Backend: clave de servicio de Supabase, secreto de tokens
@@ -9,7 +9,7 @@
 !.env.example
 api/.env
 
-# Visión: clave del HMAC de matrículas (sección 6).
+# Visión: clave del HMAC de matrículas (docs/DISENO.md, sección 6).
 # Si esta clave se filtra junto con la base, los hashes de matrícula
 # se vuelven reversibles por fuerza bruta.
 vision/config.json
@@ -34,9 +34,6 @@ vision/recortes/
 vision/debug/
 *.mp4
 
-# Padrón de permisos con datos reales (el de prueba va en db/)
-vision/padron*.csv
-
 
 # ============================================================
 #  Node.js  (api/)
@@ -47,30 +44,6 @@ yarn-debug.log*
 yarn-error.log*
 .npm/
 # package-lock.json SÍ se versiona: fija las versiones exactas
-
-
-# ============================================================
-#  Python  (vision/)
-# ============================================================
-__pycache__/
-*.py[cod]
-.venv/
-venv/
-env/
-*.egg-info/
-.pytest_cache/
-
-
-# ============================================================
-#  Modelos de YOLO
-#  Pesan entre 6 MB y 150 MB. Git no maneja bien binarios grandes
-#  y quedan en el historial para siempre aunque después se borren.
-#  Cómo obtenerlos va documentado en vision/README.
-# ============================================================
-*.pt
-*.onnx
-*.engine
-runs/
 
 
 # ============================================================

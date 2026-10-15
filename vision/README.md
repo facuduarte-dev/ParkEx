@@ -2,7 +2,7 @@
 
 Proceso Java que atiende las webcams de las plazas reservadas. Lee la chapa,
 comprueba si lleva el distintivo de discapacidad y le reporta a la API el HMAC
-de la matrícula. La sección 8 del README de la raíz explica el ciclo; acá está
+de la matrícula. La sección 8 de [docs/DISENO.md](../docs/DISENO.md) explica el ciclo; acá está
 cómo compilarlo, calibrarlo y qué hacer cuando no lee.
 
 ## Qué hace falta
@@ -130,4 +130,4 @@ cada sesión conviene confirmarlo con `camera N` y `DEBUG_DIR`.
 **Tardan en entregar imagen.** DroidCam manda unos 2,5 s de cuadros de relleno
 antes del video real. `CameraCapture` descarta los primeros 3 s justamente por
 eso, y por eso también la cámara se abre por evento y no se deja abierta: fuera
-de esos segundos no hay nada mirando la plaza (README 6.1).
+de esos segundos no hay nada mirando la plaza (DISENO 6.1).

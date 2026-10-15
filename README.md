@@ -17,7 +17,7 @@ una persona.
 
 ---
 
-## 🏆 Reconocimiento
+## Reconocimiento
 
 ParkEx se presentó en la **III Semana Académica de Ingeniería en Logística** de
 la Universidad Tecnológica del Uruguay (UTEC), Instituto Tecnológico Regional
@@ -55,18 +55,18 @@ ParkEx ataca las dos cosas con hardware de bajo costo:
 
 ## Características
 
-- 🗺️ **Plano en tiempo real.** El plano SVG de cada nivel se repinta en el
+- **Plano en tiempo real.** El plano SVG de cada nivel se repinta en el
   momento en que cambia una plaza, sin recargar la página.
-- 🔎 **Verificación de plazas reservadas.** Lectura de matrícula por OCR, con
+- **Verificación de plazas reservadas.** Lectura de matrícula por OCR, con
   varias fotos por evento y consenso entre lecturas para descartar errores.
-- ♿ **Sin padrones externos.** El permiso se reconoce por el distintivo `DI`
+- **Sin padrones externos.** El permiso se reconoce por el distintivo `DI`
   impreso en la propia chapa uruguaya.
-- 🧑‍⚖️ **El sistema no sanciona.** Una lectura dudosa queda como *no
+- **El sistema no sanciona.** Una lectura dudosa queda como *no
   verificable* y nunca genera alerta; las alertas van a revisión humana.
-- 🔒 **Privacidad por diseño.** La matrícula nunca se guarda en texto: sale de
+- **Privacidad por diseño.** La matrícula nunca se guarda en texto: sale de
   la máquina del parking solo como HMAC-SHA256, y las imágenes se procesan en
   memoria y se descartan.
-- 🔌 **Sensores sin credenciales.** El Arduino de la plaza no tiene WiFi ni
+- **Sensores sin credenciales.** El Arduino de la plaza no tiene WiFi ni
   token; toda la conectividad vive en una sola computadora que hace de puente.
 
 ## Cómo funciona

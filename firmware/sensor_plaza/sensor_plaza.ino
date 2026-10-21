@@ -1,9 +1,9 @@
 /*
  * ParkEx - Sensor de ocupacion de una plaza
  *
- * Mide la distancia con un HC-SR04 montado en el cielorraso, apuntando hacia
- * abajo y centrado sobre la plaza (README 7.2), y decide cuando la plaza
- * cambia de estado (README 7.3).
+ * Mide la distancia con un HC-SR04 montado al frente de la plaza, a la altura
+ * de la matricula (README 7.2), y decide cuando la plaza cambia de estado
+ * (README 7.3).
  *
  * No habla con la red ni sabe que existe una API: emite el protocolo serie del
  * README 7.4 y el puente lo traduce a POST /api/eventos (README 2.1.1). Por eso
@@ -24,16 +24,17 @@ const int ledVerde = 3;     // encendido = plaza libre
 
 // ---------------------------------------------------------------- Calibracion
 //
-// Con la plaza vacia el sensor mide la distancia al piso; con un auto debajo,
-// la distancia al techo del vehiculo. El umbral va entre esos dos valores.
+// Con la plaza vacia el eco vuelve de lejos, desde el fondo de la plaza; con un
+// auto estacionado vuelve desde su frente, a menos de un metro. El umbral va
+// entre esos dos valores.
 //
 // Para calibrar: descomentar DEPURAR_DISTANCIA, anotar la lectura con la plaza
 // vacia y con el auto adentro, y poner el umbral en el punto medio.
 
 // #define DEPURAR_DISTANCIA
 
-const int DISTANCIA_PISO_CM = 180;   // sensor a 2,3 m del piso
-const int UMBRAL_CM         = 160;   // punto medio piso / techo del auto
+const int DISTANCIA_VACIA_CM = 180;  // plaza vacia: eco desde el fondo
+const int UMBRAL_CM          = 160;  // entre plaza vacia y frente del auto
 
 const int DISTANCIA_MINIMA_CM = 2;   // fuera de este rango el HC-SR04 no mide
 const int DISTANCIA_MAXIMA_CM = 400;

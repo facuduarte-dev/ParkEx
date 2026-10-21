@@ -32,7 +32,7 @@ más serios que tenía el diseño anterior.
 
 | Problema en vía pública | Cómo lo resuelve el parking privado |
 |---|---|
-| El HC-SR04 se degrada con lluvia, suciedad y cambios de temperatura | Ambiente techado y estable, sensor montado en el cielorraso |
+| El HC-SR04 se degrada con lluvia, suciedad y cambios de temperatura | Ambiente techado y estable, sensor montado al frente de la plaza |
 | El OCR falla de noche, en ángulo y con la chapa sucia | La matrícula se lee en la plaza reservada: vehículo detenido, iluminación artificial constante y tiempo de sobra para reintentar |
 | No existe una API pública del padrón de permisos de la Intendencia | No hace falta consultarlo: el distintivo de discapacidad viene impreso en la propia chapa (4.3) |
 | Escala inabarcable: miles de plazas dispersas por la ciudad | Un parking son entre 20 y 200 plazas, concentradas en un edificio con una computadora de operacion |
@@ -101,7 +101,7 @@ la red y las credenciales.
 Tres consecuencias, y ninguna es menor:
 
 - **El dispositivo físico no guarda secretos.** Una placa atornillada al
-  cielorraso de un subsuelo es accesible: se desatornilla y se lleva. Si el
+  frente de una plaza es accesible: se desatornilla y se lleva. Si el
   token del dispositivo viviera ahí, quien se la lleva puede reportar eventos
   falsos hasta que alguien revoque el token. Acá el token vive en el `.env` del
   puente, que está bajo llave con el resto de la infraestructura. Del Arduino no
@@ -254,8 +254,8 @@ Express.
 - **Placas con WiFi integrado (ESP32, ESP32-CAM):** era el diseño anterior, y
   la idea de que cada sensor hablara solo con la API es atractiva. Se descartó
   por tres motivos, en orden de peso. Primero, **la credencial queda expuesta**:
-  el token y la contraseña del WiFi tendrían que vivir en una placa accesible en
-  el cielorraso de un subsuelo. Segundo, **multiplica los puntos de falla por
+  el token y la contraseña del WiFi tendrían que vivir en una placa accesible al
+  frente de cada plaza. Segundo, **multiplica los puntos de falla por
   plaza**: cada nodo suma su propia antena, su propia reconexión y su propia
   fuente, y cuando una plaza deja de reportar hay que ir físicamente hasta ella
   para saber por qué. Tercero, **cuesta más depurar**: un sensor que mide mal y
@@ -590,7 +590,7 @@ una silla de ruedas. El diseño lo trata como tal:
   que dejar RLS apagado: apagado, los permisos por defecto de Supabase le dan a
   `anon` acceso de lectura y escritura a todo el esquema `public`, y la clave
   pública está —por diseño— a la vista en el JavaScript del navegador.
-- **El hardware de la plaza no guarda credenciales.** El Arduino del cielorraso
+- **El hardware de la plaza no guarda credenciales.** El Arduino de la plaza
   no tiene token ni contraseña de red: escribe distancias por un cable
   (sección 2.1.1). Quien se lo lleve no se lleva nada más que un
   microcontrolador. El único dispositivo con token es el puente, y corre en la
@@ -633,15 +633,16 @@ Dos LEDs de señalización local, opcionales pero muy útiles al calibrar:
 | Rojo | pin 2, con resistencia de 220 a 330 Ω a GND | Plaza ocupada |
 | Verde | pin 3, con resistencia de 220 a 330 Ω a GND | Plaza libre |
 
-Permiten ver el estado sin mirar la pantalla: parado debajo del sensor se sabe
+Permiten ver el estado sin mirar la pantalla: parado frente al sensor se sabe
 si el umbral quedó bien calibrado.
 
 ### 7.2 Montaje
 
-En un parking techado el montaje correcto es **el sensor en el cielorraso,
-apuntando hacia abajo**, centrado sobre la plaza y a unos 2,2 a 2,5 m del piso.
-Con la plaza vacía el sensor mide la distancia al piso; con un auto debajo, la
-distancia al techo del vehículo. El umbral se calibra entre ambos valores.
+En un parking techado el montaje correcto es **el sensor al frente de la
+plaza, a la altura de la matrícula**, apuntando hacia el vehículo. Con la plaza
+vacía el eco vuelve de lejos, desde el fondo de la plaza; con un auto
+estacionado vuelve desde su frente, a menos de un metro. El umbral se calibra
+entre ambos valores.
 
 Es un escenario mucho más favorable que la vía pública: sin lluvia, sin
 suciedad, sin variación térmica relevante y con distancias fijas y conocidas.
@@ -759,8 +760,8 @@ Lo que hay que resolver en el montaje:
 - **Oclusión.** Un auto mal estacionado puede tapar su propia matrícula, y una
   persona parada delante también. No es un caso a evitar: es un caso a manejar,
   y se maneja dejando la lectura en `no_verificable`.
-- **El alcance del USB**, otra vez. Vale lo mismo que en 7.2, con el agravante
-  de que la cámara va al frente de la plaza y no en el cielorraso.
+- **El alcance del USB**, otra vez. Vale lo mismo que en 7.2: la cámara va al
+  frente de la plaza, igual que el sensor.
 
 La cámara no necesita token propio: el dispositivo que se autentica contra la
 API es el proceso lector, y reporta indicando a qué plaza corresponde cada

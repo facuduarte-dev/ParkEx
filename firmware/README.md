@@ -1,7 +1,7 @@
 # Sensor de ocupación de una plaza
 
 Sketch de Arduino Uno para `sensor_plaza/sensor_plaza.ino`. Mide la distancia al
-piso con un HC-SR04 montado en el cielorraso, decide si la plaza está ocupada y
+auto con un HC-SR04 montado al frente de la plaza, decide si la plaza está ocupada y
 lo escribe por el puerto serie. Las secciones 7.1 a 7.4 de [docs/DISENO.md](../docs/DISENO.md)
 explican el circuito y el protocolo; acá está cómo subirlo y calibrarlo.
 
@@ -42,11 +42,12 @@ reintentar.
 ## Calibrar el umbral
 
 Es el paso que más se saltea y el que más problemas da. Los valores que vienen
-en el sketch son para un sensor a 2,3 m del piso:
+en el sketch son para un sensor al frente de la plaza, a la altura de la
+matrícula:
 
 ```cpp
-const int DISTANCIA_PISO_CM = 180;   // sensor a 2,3 m del piso
-const int UMBRAL_CM         = 160;   // punto medio piso / techo del auto
+const int DISTANCIA_VACIA_CM = 180;  // plaza vacia: eco desde el fondo
+const int UMBRAL_CM          = 160;  // entre plaza vacia y frente del auto
 ```
 
 Sobre una mesa el sensor mide 20 o 30 cm, o sea **siempre** por debajo del
@@ -91,7 +92,7 @@ la media hora. Si nunca hubo una medición válida no se manda nada: pingear
 | Lo que ves | Qué es |
 |---|---|
 | El puente no puede abrir el puerto | Un puerto serie lo abre un solo programa a la vez. Cerrá el monitor serie del IDE |
-| La plaza queda ocupada para siempre | `UMBRAL_CM` está por encima de la distancia al piso. Calibrá |
+| La plaza queda ocupada para siempre | `UMBRAL_CM` está por encima de la distancia con la plaza vacía. Calibrá |
 | Puros `-1` en el monitor | El sensor no recibe eco: fuera de rango, mal conectado, o apuntando a una superficie que lo dispersa |
 | El puente dice `descartada:` | Llegó una línea que no entiende. Normal justo después de un reinicio de la placa |
 | Nada llega a la API | El Arduino sigue midiendo y mostrándolo en los LED. El problema está en el puente o en la red |

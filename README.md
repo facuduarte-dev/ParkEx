@@ -184,10 +184,10 @@ página.
 Proyecto desarrollado por estudiantes de Tecnologías de la Información del
 ITSP (Paysandú, Uruguay).
 
-**Autores:** Joaquin Castro, Catalina Ligüera, Luciano Bazzano, Facundo Duarte y
+**Autores:** Joaquín Castro, Catalina Ligüera, Luciano Bazzano, Facundo Duarte y
 Lucio Facchin.
 
-**Docentes tutores:** Facundo Rubil y Federico Fagundez.
+**Docentes tutores:** Facundo Rubil y Federico Fagúndez.
 
 ## Cómo citar
 

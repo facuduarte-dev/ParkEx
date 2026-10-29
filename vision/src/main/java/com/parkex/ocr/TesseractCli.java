@@ -55,17 +55,9 @@ public final class TesseractCli {
     public TesseractCli(String executable, PlateNormalizer normalizer) { this.executable = executable; this.normalizer = normalizer; }
 
     /**
-     * Donde esta el binario de Tesseract.
-     *
-     * Vive ACA, y no en cada lugar que construye un TesseractCli, porque
-     * tenerlo en dos lados fue exactamente el problema: Main miraba la ruta de
-     * instalacion de Windows y LectorService se conformaba con "tesseract" a
-     * secas. El instalador de Windows NO agrega Tesseract al PATH, asi que en
-     * esta maquina el modo image andaba y el servicio devolvia no_verificable
-     * en todas las lecturas —confianza 0, sin una sola linea de error—, porque
-     * PlateReader atrapa la excepcion del proceso que no existe y la convierte
-     * en "no pude leer". Un fallo de instalacion se veia igual que una foto
-     * borrosa.
+     * Donde esta el binario de Tesseract: TESSERACT_PATH si esta definida, la
+     * ruta de instalacion de Windows (cuyo instalador NO lo agrega al PATH) o
+     * "tesseract" a secas.
      */
     public static String rutaPorDefecto() {
         String delEntorno = System.getenv("TESSERACT_PATH");
@@ -76,12 +68,6 @@ public final class TesseractCli {
 
     /** Cuantos caracteres alfanumericos vio Tesseract, y que matricula salio. */
     record Reading(OcrResult result, int rawLength) { }
-
-    /** Un recorte suelto es un lote de uno. */
-    public OcrResult read(Mat image) throws IOException, InterruptedException {
-        List<OcrResult> resultados = readAll(List.of(image));
-        return resultados.isEmpty() ? OcrResult.unreadable() : resultados.get(0);
-    }
 
     /**
      * Lee todos los recortes de un cuadro. Devuelve una lista alineada con la

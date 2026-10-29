@@ -4,7 +4,7 @@ const API_URL = process.env.API_URL ?? 'http://localhost:3000';
 const TOKEN = process.env.TOKEN_DISPOSITIVO;
 const CONFIANZA = Number(process.env.CONFIANZA_SENSOR ?? 0.8);
 
-const INTENTOS = 5;
+export const INTENTOS = 5;
 const ESPERA_INICIAL_MS = 1000;
 
 const dormir = (ms) => new Promise((resolver) => setTimeout(resolver, ms));

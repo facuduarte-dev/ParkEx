@@ -110,7 +110,7 @@ Tres consecuencias, y ninguna es menor:
   lo que el dispositivo está diciendo. No hay que distinguir entre un sensor que
   mide mal y un WiFi que no conecta: son dos etapas separadas, cada una con su
   propia forma de fallar.
-- **Se paga con un cable.** Es el costo real y está en la sección 13: el Arduino
+- **Se paga con un cable.** Es el costo real y está en la sección 12: el Arduino
   tiene que llegar por USB hasta la computadora, y eso limita la distancia. No es
   gratis y no se disimula.
 
@@ -261,7 +261,7 @@ Express.
   para saber por qué. Tercero, **cuesta más depurar**: un sensor que mide mal y
   un nodo que no asocia al WiFi se ven igual desde la API —silencio—, mientras
   que por el puerto serie se ve exactamente qué está midiendo. La contrapartida
-  honesta es el cable USB hasta el puente, y está anotada en la sección 13.
+  honesta es el cable USB hasta el puente, y está anotada en la sección 12.
 - **Detección de vehículos con YOLO:** ya no hace falta. El sensor de la plaza
   es el que avisa que llegó un auto; no hay que buscarlo dentro de la imagen.
   Esto elimina del proyecto una dependencia pesada y un modelo por entrenar.
@@ -467,9 +467,8 @@ Todos los endpoints bajo `/api`.
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| `GET` | `/api/niveles` | Niveles con dimensiones del plano y conteo de libres |
-| `GET` | `/api/plazas?nivel_id=` | Plazas de un nivel, con posición y estado |
-| `GET` | `/api/plazas/:id` | Detalle de una plaza |
+| `GET` | `/api/niveles` | Niveles con dimensiones del plano, ordenados |
+| `GET` | `/api/plazas?nivel_id=` | Plazas con posición y estado; sin `nivel_id`, las de todos los niveles |
 
 ### Dispositivos (requieren token de dispositivo)
 
@@ -520,24 +519,28 @@ en una acusación.
 El token va en el header `Authorization: Bearer <token>`. El backend verifica
 que el dispositivo tenga permitido reportar sobre esa plaza o estacionamiento.
 
-### Administración (requieren sesión de usuario)
+### Administración (requieren sesión de administrador)
 
 | Método | Ruta | Descripción |
 |---|---|---|
 | `PATCH` | `/api/plazas/:id` | Cambio manual de estado |
-| `GET` | `/api/eventos?plaza_id=&desde=&hasta=` | Historial de ocupación |
-| `GET` | `/api/lecturas?plaza_id=` | Historial de lecturas de una plaza reservada |
 | `GET` | `/api/alertas` | Bandeja de alertas pendientes de revisión |
 | `PATCH` | `/api/alertas/:id` | Marcar una alerta como revisada |
 | `POST` | `/api/niveles` | Alta de un piso con sus plazas generadas |
 | `DELETE` | `/api/niveles/:id` | Baja de un piso; 409 si tiene historial |
 
+Una sesión válida de Supabase no alcanza: `adminAuth` exige además que el
+correo de la cuenta figure en la variable `ADMIN_EMAILS` de la API (separados
+por comas). La clave pública está en el navegador, así que si el registro de
+cuentas quedara abierto cualquiera podría crearse un usuario; con la lista, esa
+cuenta recibe `403`. Sin la variable no entra nadie.
+
 **Todo cambio de estado pasa por `registrar_evento()`.** Tanto el `POST` de
 dispositivo como el `PATCH` manual del panel llaman a esa función de la base, y
 no escriben `plazas` por su cuenta. Es lo que garantiza la regla de la sección
 4.4 —primero el evento, después el estado— y que las dos escrituras ocurran en
-una sola transacción. La autorización es la excepción y va aparte: no es un
-evento de ocupación, así que no entra en `eventos`.
+una sola transacción. La autorización la resuelve `POST /api/lecturas` y va
+aparte: no es un evento de ocupación, así que no entra en `eventos`.
 
 **No hay endpoint de tiempo real.** Todo lo que el navegador *lee* pasa por esta
 API; los avisos de cambio llegan por el canal de Supabase Realtime, directo
@@ -652,7 +655,7 @@ la computadora que corre el puente, y el USB 2.0 está especificado hasta 5 m.
 Con un cable activo (con repetidor) se llega a 15 o 20 m, y con un extensor USB
 sobre cable de red, a 50 m. Para el prototipo —una sola plaza instrumentada—
 alcanza sobrado. Para un parking entero es la limitación real del diseño y está
-anotada como tal en la sección 13.
+anotada como tal en la sección 12.
 
 ### 7.3 Lógica del firmware
 
@@ -919,8 +922,8 @@ ParkEx/
 │   │   ├── supabase.js           Cliente de Supabase con la clave pública
 │   │   ├── api.js                Capa de datos: lectura y canal de tiempo real
 │   │   ├── plano.js              Plano SVG y selector de niveles
+│   │   ├── reserva.js            Modal de reserva de una plaza
 │   │   └── admin.js
-│   └── datos/plazas-demo.json    Datos de fase 2, sin backend
 ├── api/                          Backend Node.js + Express
 │   ├── src/
 │   │   ├── index.js              Monta los routers y el manejador de errores
@@ -931,14 +934,10 @@ ParkEx/
 │   │   ├── routes/               niveles, plazas, eventos, lecturas, alertas
 │   │   └── middleware/           adminAuth, deviceAuth, errorHandler
 │   ├── scripts/crear_token_dispositivo.js   Tokens de dispositivo
-│   ├── package.json
-│   └── .env.example
+│   └── package.json
 ├── vision/                       Lector de matrículas (Java)
-│   ├── src/                      Recorte, lectura, normalización y hasheo
-│   ├── config.example.json       Cámaras, URL de la API y clave del HMAC
-│   └── README.md                 Cómo compilarlo y calibrar las cámaras
+│   └── src/                      Recorte, lectura, normalización y hasheo
 ├── firmware/                     Arduino Uno
-│   ├── README.md                 Conexionado y calibración
 │   └── sensor_plaza/
 │       └── sensor_plaza.ino      Mide, decide el estado y lo emite por serie
 ├── gateway/                      Puente serie (Node.js)
@@ -946,13 +945,11 @@ ParkEx/
 │   │   ├── index.js              Abre el puerto y traduce cada línea
 │   │   ├── protocolo.js          Parser de LISTO / EVENTO / PING / DIST
 │   │   └── api.js                POST /api/eventos con reintentos
-│   ├── package.json
-│   └── .env.example              Puerto serie, URL de la API y token
+│   └── package.json
 ├── db/
 │   ├── esquema.sql               Tablas y tipos
 │   ├── funciones.sql             registrar_evento(): evento + estado en una operación
-│   ├── politicas.sql             RLS y publicación de tiempo real
-│   └── datos_prueba.sql          El parking de las capturas, generado desde la base
+│   └── politicas.sql             RLS y publicación de tiempo real
 ├── docs/
 │   ├── DISENO.md                 Este documento
 │   └── img/                      Figuras del README
@@ -962,108 +959,12 @@ ParkEx/
 ```
 
 Los tres archivos con secretos —`api/.env`, `gateway/.env` y
-`vision/config.json`— están en `.gitignore` y se crean copiando su respectivo
-`.example`. **El sketch del Arduino no tiene archivo de secretos**, y ese es
+`vision/config.json`— están en `.gitignore` y no se versionan. **El sketch del Arduino no tiene archivo de secretos**, y ese es
 justamente el punto de la sección 2.1.1.
 
 ---
 
-## 11. Puesta en marcha
-
-### Base de datos
-
-Crear un proyecto en [supabase.com](https://supabase.com) y correr, desde el
-editor SQL y **en este orden**, los cuatro archivos de `db/`:
-
-| # | Archivo | Qué hace |
-|---|---|---|
-| 1 | `esquema.sql` | Tablas y tipos |
-| 2 | `funciones.sql` | `registrar_evento()`, que usa el `PATCH` de la API |
-| 3 | `datos_prueba.sql` | El estacionamiento de las capturas: dos niveles, 50 plazas y los dos dispositivos |
-| 4 | `politicas.sql` | RLS y publicación de tiempo real |
-
-El orden importa: `funciones.sql` usa los tipos que crea `esquema.sql`, y
-`politicas.sql` cierra el acceso público a las tablas sensibles. Correr los tres
-primeros y saltear el cuarto deja la base abierta a cualquiera que tenga la
-clave pública, que está a la vista en el navegador. `politicas.sql` se puede
-volver a correr cuantas veces haga falta sin romper nada.
-
-Para comprobar que quedó bien:
-
-```sql
-select tablename, rowsecurity from pg_tables where schemaname = 'public' order by tablename;
-select tablename from pg_publication_tables where pubname = 'supabase_realtime';
-```
-
-Todas las tablas tienen que aparecer con `rowsecurity` en `true`, y la segunda
-consulta tiene que devolver `plazas`.
-
-### Backend
-
-```bash
-cd api
-npm install
-cp .env.example .env
-npm run dev
-```
-
-Completar `.env` con las credenciales de Supabase. La API queda en
-`http://localhost:3000`.
-
-### Sitio web
-
-```bash
-npx serve -l 5173 web 
-```
-
-Tiene que servirse por HTTP, no abrirse como archivo: con `file://` el navegador
-bloquea el `fetch` del JSON y además rechaza los módulos ES, con lo cual no
-carga ni una línea de JavaScript. La fuente de datos se controla con la
-constante `MODO` en `web/js/api.js`.
-
-Los tres archivos de `web/js/` son módulos ES y se cargan encadenados desde un
-único `<script type="module">` por página: `plano.js` (o `admin.js`) importa
-`api.js`, que importa `supabase.js`. Por eso el HTML no lleva una etiqueta por
-archivo.
-
-### Lector de matrículas (opcional)
-
-Se compila y se corre según se explica en `vision/README.md`. Antes de
-arrancarlo hay que copiar `config.example.json` a `config.json` y completar la
-URL de la API, el token del dispositivo, el índice de cada webcam y la clave
-del HMAC. Esa clave no la conoce nadie más —el backend tampoco— pero tiene que
-ser **estable**: si cambia, las lecturas nuevas de un mismo vehículo dejan de
-coincidir con las viejas y el historial de la plaza queda partido en dos.
-
-### Puente serie (opcional)
-
-```bash
-cd gateway
-npm install
-cp .env.example .env
-npm start
-```
-
-En `.env` van el puerto serie del Arduino (`COM3` en Windows, `/dev/ttyACM0` en
-Linux), la URL de la API y el token del dispositivo, que se genera con
-`api/scripts/crear_token_dispositivo.js`. El puente necesita que la API esté levantada; el
-Arduino, en cambio, funciona solo: si el puente no está, sigue midiendo y
-mostrando el estado en sus LEDs, y lo que se pierde es el reporte.
-
-### Firmware (opcional)
-
-Ver [firmware/README.md](../firmware/README.md). Se abre `sensor_plaza.ino` en el
-IDE de Arduino, se elige la placa **Arduino Uno** y su puerto, y se sube. El
-monitor serie a 115200 baudios muestra exactamente las líneas que va a leer el
-puente.
-
-**Un puerto serie lo abre un solo programa a la vez.** Si el monitor del IDE
-está abierto, el puente no puede abrir el puerto, y al revés. Es la causa número
-uno de "no anda" en esta parte del sistema.
-
----
-
-## 12. Plan de fases
+## 11. Plan de fases
 
 Cada fase entrega algo demostrable por sí solo. Las fases 1 a 5 **no requieren
 hardware**: un retraso en la compra o una falla del Arduino no bloquea el
@@ -1091,10 +992,6 @@ correcto.
 El lector de matrículas —lo que en el plan original era la parte más riesgosa—
 ya estaba desarrollado y probado sobre fotos fijas antes de la fase 7. Esa fase
 no fue escribirlo: fue montarlo, calibrarlo y conectarlo.
-
-El criterio de aceptación de la fase 3 conviene tenerlo escrito: se cambia la
-constante `MODO` de `demo` a `real` y **la página tiene que verse idéntica**. Si
-eso pasa, la separación entre la capa de datos y el plano era correcta.
 
 **La fase 6 va partida en dos a propósito.** Tiene dos riesgos que no se parecen
 en nada: uno es físico —¿el ultrasónico mide bien contra el techo de un auto, a
@@ -1125,7 +1022,7 @@ sino de instalación: dónde se monta la cámara y si la chapa queda visible.
 
 ---
 
-## 13. Riesgos y mitigaciones
+## 12. Riesgos y mitigaciones
 
 | Riesgo | Impacto | Mitigación |
 |---|---|---|
@@ -1143,7 +1040,7 @@ sino de instalación: dónde se monta la cámara y si la chapa queda visible.
 
 ---
 
-## 14. Glosario
+## 13. Glosario
 
 - **ALPR:** *Automatic License Plate Recognition*, el pipeline completo de
   lectura automática de matrículas.

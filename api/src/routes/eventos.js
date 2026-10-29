@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { supabase } from '../lib/supabase.js';
 import { deviceAuth } from '../middleware/deviceAuth.js';
-import { adminAuth } from '../middleware/adminAuth.js';
 
 export const eventosRouter = Router();
 
@@ -70,27 +69,6 @@ eventosRouter.post('/', deviceAuth, async (req, res, next) => {
     }
 
     res.status(201).json(data);
-  } catch (err) {
-    next(err);
-  }
-});
-
-// GET /api/eventos?plaza_id=&desde=&hasta=
-// Administracion. Historial de ocupacion de una plaza.
-eventosRouter.get('/', adminAuth, async (req, res, next) => {
-  try {
-    const { plaza_id, desde, hasta } = req.query;
-
-    let query = supabase.from('eventos').select('*').order('creado_en', { ascending: false });
-
-    if (plaza_id) query = query.eq('plaza_id', plaza_id);
-    if (desde) query = query.gte('creado_en', desde);
-    if (hasta) query = query.lte('creado_en', hasta);
-
-    const { data, error } = await query;
-    if (error) throw error;
-
-    res.json(data);
   } catch (err) {
     next(err);
   }

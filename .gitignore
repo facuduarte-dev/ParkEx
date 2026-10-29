@@ -1,26 +1,19 @@
 # ============================================================
 #  SECRETOS  —  lo más importante de este archivo
-#  Cada uno se crea copiando su respectivo .example
 # ============================================================
 
-# Backend: clave de servicio de Supabase, secreto de tokens
+# Backend y puente: clave de servicio de Supabase, tokens de dispositivo
 .env
 .env.*
-!.env.example
-api/.env
 
 # Visión: clave del HMAC de matrículas (docs/DISENO.md, sección 6).
 # Si esta clave se filtra junto con la base, los hashes de matrícula
 # se vuelven reversibles por fuerza bruta.
 vision/config.json
 
-# Firmware: SSID, contraseña de WiFi y token del dispositivo
-firmware/sensor_plaza/credenciales.h
-
 # Claves y certificados sueltos, por si aparecen
 *.pem
 *.key
-!**/*.example.*
 
 
 # ============================================================
@@ -60,7 +53,7 @@ build/
 
 # ============================================================
 #  Base de datos
-#  esquema.sql y datos_prueba.sql SÍ se versionan
+#  esquema.sql, funciones.sql y politicas.sql SÍ se versionan
 # ============================================================
 db/backups/
 *.dump

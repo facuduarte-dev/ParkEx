@@ -213,19 +213,6 @@ body {
   stroke: var(--linea);
 }
 
-/* Las referencias son contexto del plano, no datos: quedan al fondo, en gris
-   y con borde punteado para que no compitan con las plazas. */
-.referencia rect {
-  fill: #fff;
-  stroke: var(--linea);
-  stroke-dasharray: 4 3;
-}
-
-.referencia text {
-  fill: #6b7280;
-  font-size: 9px;
-}
-
 .plaza { cursor: pointer; }
 
 .plaza rect {

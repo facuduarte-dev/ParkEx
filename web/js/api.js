@@ -4,16 +4,11 @@ import { supabase, observarLatido } from './supabase.js';
  * Capa de datos.
  *
  * Todo el resto del frontend pide los datos por aca y nunca hace fetch por su
- * cuenta. La razon: en la fase 2 salen de un JSON local y en la fase 3 de la API
- * real. Si plano.js hablara directo con el servidor, cambiar de fuente
- * obligaria a tocar el plano. Asi solo se cambia la constante MODO.
+ * cuenta: el plano y el panel no tienen que saber de donde salen los datos ni
+ * como llegan.
  */
 
 export const API = {
-  // 'demo' -> lee datos/plazas-demo.json
-  // 'real' -> pega contra el backend Express
-  MODO: 'real',
-
   /**
    * La URL de la API se resuelve en el navegador y no en un archivo de
    * configuracion porque este frontend no tiene build: no hay paso de
@@ -28,10 +23,9 @@ export const API = {
    * resto del objeto sigan funcionando sin tocarse.
    */
   get URL_BASE() {
-    // Las IP privadas cuentan como local. 'npx serve' imprime la URL de red
-    // ademas de la de localhost, y abriendo esa la pagina quedaba servida desde
-    // 192.168.x.x: caia a la rama hosteada y la API de produccion le rechazaba
-    // el pedido por CORS, que solo admite el dominio de Netlify.
+    // Las IP privadas cuentan como local. Abriendo la pagina desde la URL de
+    // red (192.168.x.x) caia a la rama hosteada y la API de produccion le
+    // rechazaba el pedido por CORS, que solo admite el dominio de Netlify.
     const host = location.hostname;
     const segundoOcteto = Number(host.split('.')[1]);
 
@@ -46,38 +40,38 @@ export const API = {
       : 'https://connectalab.onrender.com/api';
   },
 
-  ARCHIVO_DEMO: 'datos/plazas-demo.json',
-
   /**
    * Niveles del estacionamiento, con las dimensiones del plano.
    * ancho_plano y alto_plano definen el sistema de coordenadas dentro del cual
    * se posicionan las plazas: son el viewBox del SVG.
    *
-   * Van ordenados por 'orden' —de la planta baja hacia abajo— porque asi se
-   * listan en el selector de niveles. Ordenar aca y no en el plano evita que el
-   * orden dependa de como quedaron escritas las filas en el JSON o en la tabla.
+   * La API ya los devuelve ordenados por 'orden' —de la planta baja hacia
+   * abajo—, que es como se listan en el selector de niveles.
    */
   async obtenerNiveles() {
-    const niveles = this.MODO === 'demo'
-      ? (await this._leerDemo()).niveles
-      : await this._pedir(`${this.URL_BASE}/niveles`);
-
-    return [...niveles].sort((a, b) => a.orden - b.orden);
+    return this._pedir(`${this.URL_BASE}/niveles`);
   },
 
-  /** Plazas de un nivel, con posicion en el plano y estado actual. */
-  async obtenerPlazas(nivelId) {
-    if (this.MODO === 'demo') {
-      const datos = await this._leerDemo();
-      return datos.plazas.filter((plaza) => plaza.nivel_id === nivelId);
-    }
-    return this._pedir(`${this.URL_BASE}/plazas?nivel_id=${nivelId}`);
-  },
-
-  
-    /**
-   * Cambia el estado de una plaza. Requiere sesion iniciada.
+  /**
+   * Todas las plazas del estacionamiento, agrupadas por nivel_id.
+   *
+   * Un solo pedido para todos los niveles en vez de uno por nivel: el plano y
+   * el panel necesitan siempre las plazas de TODOS los niveles, y pedirlas de
+   * a una era un viaje de red por piso para traer la misma tabla en partes.
    */
+  async obtenerPlazasPorNivel() {
+    const plazas = await this._pedir(`${this.URL_BASE}/plazas`);
+    const porNivel = new Map();
+
+    for (const plaza of plazas) {
+      if (!porNivel.has(plaza.nivel_id)) porNivel.set(plaza.nivel_id, []);
+      porNivel.get(plaza.nivel_id).push(plaza);
+    }
+
+    return porNivel;
+  },
+
+  /** Cambia el estado de una plaza. Requiere sesion de administrador. */
   async cambiarEstado(plazaId, estado, token) {
     return this._enviar('PATCH', `${this.URL_BASE}/plazas/${plazaId}`, token, { estado });
   },
@@ -102,7 +96,7 @@ export const API = {
     return this._enviar('DELETE', `${this.URL_BASE}/niveles/${nivelId}`, token);
   },
 
-    /**
+  /**
    * Bandeja de alertas pendientes de revision.
    *
    * Va por la API y NO por Supabase directo, aunque el panel ya tenga cliente
@@ -119,18 +113,13 @@ export const API = {
   async marcarAlertaRevisada(alertaId, token) {
     return this._enviar('PATCH', `${this.URL_BASE}/alertas/${alertaId}`, token, {});
   },
-  
+
   /**
    * Avisa cada vez que cambia una plaza en la base.
    *
-   * Va aca por la misma razon que el resto de la capa: el plano no tiene que
-   * saber de donde salen los datos ni como llegan. En modo demo no hay nada que
-   * escuchar —un JSON no cambia solo— y devolver una funcion vacia deja que el
-   * plano se escriba una sola vez para los dos modos.
-   *
    * Escuchamos la TABLA, no la API. Cualquier cosa que toque plazas dispara el
-   * evento: el panel, un update a mano en el editor SQL, o el sensor de la fase
-   * 6. Si escucharamos el endpoint, un cambio que no pasara por Express seria
+   * evento: el panel, un update a mano en el editor SQL, o el sensor. Si
+   * escucharamos el endpoint, un cambio que no pasara por Express seria
    * invisible.
    *
    *   alCambiar(plaza)  una plaza cambio: llega la fila entera, ya actualizada
@@ -139,13 +128,7 @@ export const API = {
    *
    * Devuelve una funcion para cortar la suscripcion.
    */
-  
   suscribirsePlazas({ alCambiar, alReconectar, alEstado = () => {} }) {
-    if (this.MODO === 'demo') {
-      alEstado('demo');
-      return () => {};
-    }
-
     // El primer SUBSCRIBED es la apertura normal del canal y no hay nada que
     // resincronizar: el plano acaba de cargar los datos. Del segundo en
     // adelante es una REconexion, y ahi si.
@@ -209,53 +192,11 @@ export const API = {
       supabase.removeChannel(canal);
     };
   },
-  /**
-   * Referencias del plano: rampa, acceso peatonal, camara de entrada.
-   * Son decoracion para que el plano se lea como un parking y no como una
-   * grilla suelta de rectangulos. No estan en el modelo de datos todavia, asi
-   * que en modo real no hay nada que traer y el plano se dibuja igual sin ellas.
-   */
-  async obtenerReferencias(nivelId) {
-    if (this.MODO !== 'demo') return [];
-
-    const datos = await this._leerDemo();
-    return (datos.referencias || []).filter((ref) => ref.nivel_id === nivelId);
-  },
 
   // --- interno ---------------------------------------------------------
 
-  _demo: null,
-
-  /**
-   * Una sola lectura del archivo de demo para toda la pagina: niveles, plazas y
-   * referencias salen del mismo JSON y pedirlo tres veces seria pedir lo mismo
-   * tres veces. Se cachea la promesa, no el resultado, para que dos llamadas
-   * simultaneas compartan el mismo fetch.
-   *
-   * Si falla se limpia el cache: guardar una promesa rechazada dejaria la
-   * pagina rota hasta recargar, aunque el problema haya sido momentaneo.
-   */
-  _leerDemo() {
-    if (!this._demo) {
-      this._demo = this._pedir(this.ARCHIVO_DEMO).catch((error) => {
-        this._demo = null;
-        throw error;
-      });
-    }
-    return this._demo;
-  },
-
-    /**
-   * Peticion autenticada. La comparten los tres endpoints que escriben.
-   *
-   * El modo demo se corta aca y no en cada metodo: el JSON es de solo lectura
-   * y falla claro en vez de simular un exito que nunca ocurrio.
-   */
+  /** Peticion autenticada. La comparten todos los endpoints de administracion. */
   async _enviar(metodo, url, token, cuerpo = null) {
-    if (this.MODO === 'demo') {
-      throw new Error('El modo demo es de solo lectura');
-    }
-
     const respuesta = await fetch(url, {
       method: metodo,
       headers: {

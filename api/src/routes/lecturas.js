@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { supabase } from '../lib/supabase.js';
 import { deviceAuth } from '../middleware/deviceAuth.js';
-import { adminAuth } from '../middleware/adminAuth.js';
 
 export const lecturasRouter = Router();
 
@@ -110,24 +109,6 @@ lecturasRouter.post('/', deviceAuth, async (req, res, next) => {
     }
 
     res.status(201).json(lectura);
-  } catch (err) {
-    next(err);
-  }
-});
-
-// GET /api/lecturas?plaza_id=
-// Administracion. Historial de lecturas de una plaza reservada.
-lecturasRouter.get('/', adminAuth, async (req, res, next) => {
-  try {
-    const { plaza_id } = req.query;
-
-    let query = supabase.from('lecturas').select('*').order('creado_en', { ascending: false });
-    if (plaza_id) query = query.eq('plaza_id', plaza_id);
-
-    const { data, error } = await query;
-    if (error) throw error;
-
-    res.json(data);
   } catch (err) {
     next(err);
   }

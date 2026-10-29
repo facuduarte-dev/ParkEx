@@ -103,74 +103,16 @@ ParkEx/
 ├── gateway/    Puente entre el puerto serie del Arduino y la API
 ├── vision/     Lector de matrículas en Java
 ├── firmware/   Sketch del sensor para Arduino Uno
-├── db/         Esquema, funciones, políticas de seguridad y datos de prueba
-├── scripts/    Lanzador local de todos los servicios
+├── db/         Esquema, funciones y políticas de seguridad
 ├── Tinkercad/  Diagramas del circuito
 └── docs/       Documento de diseño y figuras
 ```
-
-## Probarlo
-
-### Solo el plano, sin backend
-
-El sitio trae datos de demostración. En `web/js/api.js` se cambia la constante
-`MODO` a `'demo'` y se sirve la carpeta:
-
-```bash
-npx serve -l 5173 web
-```
-
-y se abre `http://localhost:5173`. Tiene que servirse por HTTP: abierto como
-archivo, el navegador bloquea los módulos de JavaScript.
-
-### El sistema completo
-
-Hace falta un proyecto propio en [Supabase](https://supabase.com), Node.js 22 o
-mayor y, para el lector de matrículas, Java 17, Maven y Tesseract.
-
-1. **Base de datos.** Correr en el editor SQL de Supabase, en este orden:
-   `db/esquema.sql`, `db/funciones.sql`, `db/datos_prueba.sql` y
-   `db/politicas.sql`.
-2. **API.**
-   ```bash
-   cd api
-   npm install
-   cp .env.example .env   # completar con las credenciales de Supabase
-   npm run dev
-   ```
-3. **Sitio web** con `MODO: 'real'` en `web/js/api.js`:
-   ```bash
-   npx serve -l 5173 web
-   ```
-4. **Hardware (opcional).** El sensor, el puente y el lector tienen cada uno su
-   guía: [firmware/README.md](firmware/README.md),
-   [vision/README.md](vision/README.md) y la sección 11 del
-   [documento de diseño](docs/DISENO.md#11-puesta-en-marcha). Sin hardware, las
-   plazas se pueden cambiar a mano desde el panel de administración.
-
-Los archivos con secretos (`api/.env`, `gateway/.env`, `vision/config.json`) no
-están en el repositorio: se crean copiando su respectivo `.example`.
-
-### Todo de una vez (Linux)
-
-Con los tres archivos de configuración completos, el lanzador verifica las
-dependencias, compila lo que falte e inicia la API, la web, el puente y el
-lector:
-
-```bash
-./scripts/iniciar-local.sh
-```
-
-Los registros quedan en `logs/` y `Ctrl+C` detiene todo. El monitor serie del
-IDE de Arduino tiene que estar cerrado para que el puente pueda abrir el puerto.
 
 ## Documentación
 
 | Documento | Contenido |
 |---|---|
 | [docs/DISENO.md](docs/DISENO.md) | Arquitectura, decisiones de diseño, modelo de datos, API, seguridad, hardware, plan de fases y riesgos |
-| [firmware/README.md](firmware/README.md) | Conexionado y calibración del sensor |
-| [vision/README.md](vision/README.md) | Compilación, configuración y calibración del lector de matrículas |
 
 ## Estado
 

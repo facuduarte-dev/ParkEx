@@ -1,8 +1,6 @@
 package com.parkex.ocr;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.imgcodecs.Imgcodecs;
-import java.nio.file.*;
 import java.util.*;
 public final class PlateDetector {
     /**
@@ -96,7 +94,7 @@ public final class PlateDetector {
         Imgproc.cvtColor(frame, gray, Imgproc.COLOR_BGR2GRAY); Imgproc.Canny(gray, edges, 100, 200);
         List<Rect> rectangles = new ArrayList<>();
         List<MatOfPoint> contours = new ArrayList<>();
-        Imgproc.findContours(edges.clone(), contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(edges, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
         contours.stream().map(Imgproc::boundingRect).forEach(rectangles::add);
 
         // En chapas reales el marco suele estar cortado por tornillos, reflejos o
@@ -104,7 +102,7 @@ public final class PlateDetector {
         Mat closed = new Mat();
         Imgproc.morphologyEx(edges, closed, Imgproc.MORPH_CLOSE,
                 Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(17, 5)));
-        contours.clear();
+        contours.forEach(Mat::release); contours.clear();
         Imgproc.findContours(closed, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
         contours.stream().map(Imgproc::boundingRect).forEach(rectangles::add);
 
@@ -114,7 +112,7 @@ public final class PlateDetector {
         Imgproc.threshold(gray, bright, 145, 255, Imgproc.THRESH_BINARY);
         Imgproc.morphologyEx(bright, bright, Imgproc.MORPH_CLOSE,
                 Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(21, 9)));
-        contours.clear();
+        contours.forEach(Mat::release); contours.clear();
         Imgproc.findContours(bright, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
         contours.stream().map(Imgproc::boundingRect).forEach(rectangles::add);
         double area = frame.width() * (double) frame.height();
@@ -126,16 +124,9 @@ public final class PlateDetector {
                 .filter(r -> r.area() >= area * .002 && r.area() <= area * .20)
                 .sorted(Comparator.comparingDouble(this::plateScore).reversed()).limit(MAXIMO_CANDIDATOS)
                 .map(r -> new Mat(frame, r).clone()).toList();
-        saveDebugCandidates(result);
+        gray.release(); edges.release(); hierarchy.release(); closed.release(); bright.release();
+        contours.forEach(Mat::release);
         return result;
-    }
-    private void saveDebugCandidates(List<Mat> candidates) {
-        String directory = System.getenv("DEBUG_DIR");
-        if (directory == null || directory.isBlank()) return;
-        try {
-            Path path = Path.of(directory, "candidatos"); Files.createDirectories(path);
-            for (int i=0; i<candidates.size(); i++) Imgcodecs.imwrite(path.resolve("candidato_"+(i+1)+".jpg").toString(), candidates.get(i));
-        } catch (Exception ignored) { }
     }
     private double plateScore(Rect r) {
         double ratio = r.width / (double) r.height;

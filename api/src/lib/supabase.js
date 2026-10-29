@@ -9,10 +9,7 @@ import 'dotenv/config';
 const { SUPABASE_URL, SUPABASE_SECRET_KEY } = process.env;
 
 if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) {
-  throw new Error(
-    'Falta SUPABASE_URL o SUPABASE_SECRET_KEY. Revisa que exista api/.env ' +
-    '(copiado de .env.example) con los valores reales de tu proyecto.'
-  );
+  throw new Error('Falta SUPABASE_URL o SUPABASE_SECRET_KEY en api/.env.');
 }
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {

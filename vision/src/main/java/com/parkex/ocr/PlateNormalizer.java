@@ -4,11 +4,13 @@ import java.util.regex.Pattern;
 public final class PlateNormalizer {
     private static final Pattern MERCOSUR = Pattern.compile("[A-Z]{3}[0-9]{4}");
     private static final Pattern OLD = Pattern.compile("[A-Z]{3}[0-9]{3}");
-    private static final Pattern SPAIN = Pattern.compile("[0-9]{4}[A-Z]{3}");
-    private static final boolean ALLOW_SPAIN = Boolean.parseBoolean(System.getenv().getOrDefault("ALLOW_SPAIN_PLATES", "false"));
+    // El escudo entre letras y digitos de la chapa Mercosur, que Tesseract
+    // suele leer como una "e" minuscula. Compilado una sola vez: normalize()
+    // corre por cada recorte de cada cuadro.
+    private static final Pattern EMBLEM = Pattern.compile("([A-Za-z0-9]{3})e([0-9]{4})");
     /**
-     * El formato anterior al Mercosur queda APAGADO por defecto, igual que el
-     * espanol, y no encendido como estaba.
+     * El formato anterior al Mercosur queda APAGADO por defecto, y no
+     * encendido como estaba.
      *
      * OLD son tres letras y tres digitos, y toda chapa Mercosur lleva URUGUAY
      * impreso arriba: siempre hay una tira de letras disponible para que
@@ -27,7 +29,7 @@ public final class PlateNormalizer {
     public String normalize(String raw) {
         if (raw == null) return "";
         String compactRaw=raw.replaceAll("[^A-Za-z0-9]","");
-        java.util.regex.Matcher emblem=Pattern.compile("([A-Za-z0-9]{3})e([0-9]{4})").matcher(compactRaw);
+        java.util.regex.Matcher emblem=EMBLEM.matcher(compactRaw);
         if(emblem.find()) {
             String withoutEmblem=correctUruguay((emblem.group(1)+emblem.group(2)).toUpperCase(Locale.ROOT));
             if(MERCOSUR.matcher(withoutEmblem).matches()) return withoutEmblem;
@@ -45,10 +47,6 @@ public final class PlateNormalizer {
                 if (MERCOSUR.matcher(candidate).matches() || (ALLOW_OLD && OLD.matcher(candidate).matches())) {
                     int corrections=corrections(slice,candidate); if(corrections<fewestCorrections){best=candidate;fewestCorrections=corrections;}
                 }
-                if (length == 7 && ALLOW_SPAIN) { 
-                    candidate = correctSpain(slice);
-                    if (SPAIN.matcher(candidate).matches()) { int corrections=corrections(slice,candidate); if(corrections<fewestCorrections){best=candidate;fewestCorrections=corrections;} }
-                }
             }
             if(!best.isEmpty()) return best;
         }
@@ -58,11 +56,6 @@ public final class PlateNormalizer {
     private String correctUruguay(String value) {
         StringBuilder out = new StringBuilder(value.length());
         for (int i = 0; i < value.length(); i++) out.append(i < 3 ? letter(value.charAt(i)) : digit(value.charAt(i)));
-        return out.toString();
-    }
-    private String correctSpain(String value) {
-        StringBuilder out = new StringBuilder(value.length());
-        for (int i = 0; i < value.length(); i++) out.append(i < 4 ? digit(value.charAt(i)) : letter(value.charAt(i)));
         return out.toString();
     }
     private char letter(char c) { return switch (c) { case '0' -> 'O'; case '1' -> 'I'; case '2' -> 'Z'; case '5' -> 'S'; case '8' -> 'B'; default -> c; }; }

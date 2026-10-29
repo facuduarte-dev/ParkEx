@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class DistintivoTest {
 
     @Test void reconoceElDistintivoAlFinalDelBloqueDeLetras() {
-        assertTrue(Distintivo.presente("IDI1483"));   // la chapa de imagenes/matricula_discapacitados.jpeg
+        assertTrue(Distintivo.presente("IDI1483"));
         assertTrue(Distintivo.presente("ADI4021"));
     }
 

@@ -44,7 +44,7 @@ document.getElementById('form-login').addEventListener('submit', async (evento) 
     password: document.getElementById('password').value
   });
 
-    if (error) {
+  if (error) {
     console.error(error);
     errorLogin.textContent = `No se pudo entrar: ${error.message}`;
     errorLogin.hidden = false;
@@ -74,12 +74,17 @@ async function mostrarPanel() {
   filasPorPlaza.clear();
 
   try {
-    const niveles = await API.obtenerNiveles();
+    // Niveles y plazas en paralelo, y todas las plazas en un solo pedido: antes
+    // era un pedido por piso, uno detras del otro.
+    const [niveles, plazasPorNivel] = await Promise.all([
+      API.obtenerNiveles(),
+      API.obtenerPlazasPorNivel()
+    ]);
     const filas = [];
     const pisos = [];
 
     for (const nivel of niveles) {
-      const plazas = await API.obtenerPlazas(nivel.id);
+      const plazas = plazasPorNivel.get(nivel.id) ?? [];
       plazas.forEach((plaza) => filas.push({ nivel, plaza }));
       pisos.push({ nivel, cantidad: plazas.length });
     }
@@ -107,23 +112,26 @@ async function mostrarPanel() {
 }
 
 /**
- * Un cambio hecho desde otro lado: otra persona en otro panel, o —desde la fase
- * 6— el sensor de la plaza. Si el panel no escuchara, dos administradores
- * trabajando a la vez se pisarian sin enterarse.
+ * Un cambio hecho desde otro lado: otra persona en otro panel, o el sensor de
+ * la plaza. Si el panel no escuchara, dos administradores trabajando a la vez
+ * se pisarian sin enterarse.
  */
 function reflejarCambio(plazaNueva) {
+  const fila = filasPorPlaza.get(Number(plazaNueva.id));
 
   // La camara acaba de resolver esta plaza. Si dio no_autorizado, la misma
   // peticion que actualizo plazas.autorizacion inserto una alerta: hay que ir
-  // a buscarla.
+  // a buscarla. Solo cuando la autorizacion CAMBIA a no_autorizado: cualquier
+  // otro update de una plaza que ya estaba asi no trae una alerta nueva.
   //
   // No hay canal de Realtime sobre "alertas" a proposito. Harian falta las dos
   // cosas que explica db/politicas.sql —meter la tabla en la publicacion Y una
   // politica de lectura para authenticated— y la segunda abriria la bandeja
   // entera a cualquier usuario logueado. El canal de plazas, que ya existe,
   // avisa igual y en el mismo instante.
-  if (plazaNueva.autorizacion === 'no_autorizado') cargarAlertas();
-  const fila = filasPorPlaza.get(Number(plazaNueva.id));
+  if (plazaNueva.autorizacion === 'no_autorizado'
+      && fila?.plaza.autorizacion !== 'no_autorizado') cargarAlertas();
+
   if (!fila) return;
 
   Object.assign(fila.plaza, plazaNueva);
@@ -172,7 +180,7 @@ function construirFila({ nivel, plaza }) {
         plaza.id, selector.value, session.access_token
       );
 
-      plaza.estado = actualizada.estado;
+      Object.assign(plaza, actualizada);
       fila.children[3].textContent = actualizada.autorizacion;
       avisar(`Plaza ${plaza.codigo} → ${ETIQUETA_ESTADO[actualizada.estado]}`);
     } catch (error) {

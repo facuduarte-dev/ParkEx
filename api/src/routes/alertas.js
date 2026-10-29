@@ -8,12 +8,12 @@ export const alertasRouter = Router();
 // Administracion. Bandeja de alertas pendientes de revision.
 alertasRouter.get('/', adminAuth, async (req, res, next) => {
   try {
-    const soloPendientes = req.query.revisada === undefined;
+    const { data, error } = await supabase
+      .from('alertas')
+      .select('*')
+      .eq('revisada', false)
+      .order('creado_en', { ascending: false });
 
-    let query = supabase.from('alertas').select('*').order('creado_en', { ascending: false });
-    if (soloPendientes) query = query.eq('revisada', false);
-
-    const { data, error } = await query;
     if (error) throw error;
 
     res.json(data);

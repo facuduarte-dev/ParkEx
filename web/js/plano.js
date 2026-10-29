@@ -47,7 +47,7 @@ const MARCA_TIPO = {
 
 const ORDEN_ESTADOS = ['libre', 'ocupado', 'reservado', 'sin_datos'];
 
-// Un elemento por nivel: { nivel, plazas, referencias }. Se carga una sola vez
+// Un elemento por nivel: { nivel, plazas }. Se carga una sola vez
 // al arrancar, porque los planos chicos necesitan las plazas de TODOS los
 // niveles para poder dibujarse, no solo las del nivel que se esta mirando.
 let niveles = [];
@@ -184,29 +184,8 @@ window.addEventListener('resize', ajustarEscala);
 
 // --- plano grande ------------------------------------------------------
 
-function dibujarReferencia(referencia) {
-  const grupo = crearSVG('g', { class: `referencia referencia-${referencia.tipo}` });
-
-  grupo.append(crearSVG('rect', {
-    x: referencia.x,
-    y: referencia.y,
-    width: referencia.ancho,
-    height: referencia.alto,
-    rx: 4
-  }));
-
-  grupo.append(crearSVG('text', {
-    x: referencia.x + referencia.ancho / 2,
-    y: referencia.y + referencia.alto / 2,
-    'text-anchor': 'middle',
-    'dominant-baseline': 'central'
-  }, referencia.etiqueta));
-
-  return grupo;
-}
-
 function dibujarPlaza(plaza) {
-    const grupo = crearSVG('g', {
+  const grupo = crearSVG('g', {
     class: `plaza estado-${plaza.estado} tipo-${plaza.tipo}`,
     // Con que plaza se corresponde cada <g>. Es lo que permite repintar una
     // sola cuando llega un cambio, en vez de volver a dibujar el plano entero.
@@ -255,7 +234,7 @@ function dibujarPlaza(plaza) {
   return grupo;
 }
 
-function dibujarPlano({ nivel, plazas, referencias }) {
+function dibujarPlano({ nivel, plazas }) {
   const svg = crearSVG('svg', {
     class: 'plano-svg',
     // El viewBox son las dimensiones del nivel guardadas en la base. El SVG se
@@ -274,9 +253,6 @@ function dibujarPlano({ nivel, plazas, referencias }) {
     height: nivel.alto_plano
   }));
 
-  // Las referencias van antes que las plazas: en SVG no hay z-index, dibuja
-  // encima lo que aparece despues en el documento.
-  referencias.forEach((item) => svg.append(dibujarReferencia(item)));
   plazas.forEach((plaza) => svg.append(dibujarPlaza(plaza)));
 
   document.getElementById('plano').replaceChildren(svg);
@@ -289,7 +265,7 @@ function dibujarPlano({ nivel, plazas, referencias }) {
 // --- planos chicos (selector de niveles) -------------------------------
 
 /**
- * La misma planta, sin texto ni referencias ni interaccion.
+ * La misma planta, sin texto ni interaccion.
  * A un cuarto del tamano los codigos de plaza no se leerian igual, y el
  * proposito del plano chico es otro: mostrar de un vistazo donde hay lugar.
  * Va aria-hidden porque el <button> que lo contiene ya dice el nivel y cuantas
@@ -470,8 +446,7 @@ const TEXTO_CONEXION = {
   TIMED_OUT:     ['caido',      'Sin conexión en vivo'],
   CLOSED:        ['caido',      'Desconectado'],
   SIN_RED:       ['caido',      'Sin red'],
-  CONECTANDO:    ['conectando', 'Reconectando…'],
-  demo:          ['demo',       'Datos de demostración']
+  CONECTANDO:    ['conectando', 'Reconectando…']
 };
 
 /** El punto de color del encabezado. Un plano que dejo de actualizarse se ve
@@ -607,8 +582,7 @@ function cambiarNivel(nivelId) {
   nivelActual = nivelId;
 
   // Solo el nombre del nivel. El del estacionamiento ya esta en la barra, y
-  // tomarlo de la base lo traeria de datos_prueba.sql, que sigue diciendo el
-  // nombre viejo: una marca escrita en dos lugares se desincroniza sola.
+  // una marca escrita en dos lugares se desincroniza sola.
   document.getElementById('nombre-nivel').textContent = datos.nivel.nombre;
 
   // La plaza elegida pertenecia al nivel anterior: dejar su detalle abierto
@@ -627,16 +601,18 @@ function mostrarError(mensaje) {
 }
 
 async function cargarNiveles() {
-  const lista = await API.obtenerNiveles();
+  // Niveles y plazas en paralelo: son dos pedidos independientes.
+  const [lista, plazasPorNivel] = await Promise.all([
+    API.obtenerNiveles(),
+    API.obtenerPlazasPorNivel()
+  ]);
   if (lista.length === 0) throw new Error('el estacionamiento no tiene niveles cargados');
 
   // Se cargan todos los niveles de una: los planos chicos los necesitan.
-  // En modo demo es un solo fetch igual, porque el archivo esta cacheado.
-  niveles = await Promise.all(lista.map(async (nivel) => ({
+  niveles = lista.map((nivel) => ({
     nivel,
-    plazas: await API.obtenerPlazas(nivel.id),
-    referencias: await API.obtenerReferencias(nivel.id)
-  })));
+    plazas: plazasPorNivel.get(nivel.id) ?? []
+  }));
 }
 
 /**

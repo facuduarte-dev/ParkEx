@@ -1,14 +1,14 @@
 import 'dotenv/config';
 import { SerialPort, ReadlineParser } from 'serialport';
 import { parsearLinea } from './protocolo.js';
-import { reportarEvento } from './api.js';
+import { reportarEvento, INTENTOS } from './api.js';
 
 const PUERTO = process.env.PUERTO_SERIE;
 const BAUDIOS = Number(process.env.BAUDIOS ?? 115200);
 const ESPERA_RECONEXION_MS = 5000;
 
 if (!PUERTO) {
-  console.error('Falta PUERTO_SERIE en gateway/.env. Corre "npm run puertos" para verlos.');
+  console.error('Falta PUERTO_SERIE en gateway/.env.');
   process.exit(1);
 }
 
@@ -35,7 +35,7 @@ async function manejarLinea(linea) {
 
   if (resultado.ok) log('   -> API ok');
   else if (resultado.permanente) log(`   -> RECHAZADO, no se reintenta: ${resultado.detalle}`);
-  else log(`   -> PERDIDO tras ${5} intentos: ${resultado.detalle}`);
+  else log(`   -> PERDIDO tras ${INTENTOS} intentos: ${resultado.detalle}`);
 }
 
 function abrirPuerto() {

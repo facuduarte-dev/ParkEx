@@ -21,6 +21,7 @@ agregar una entrada en [`CAMBIOS.md`](CAMBIOS.md), en ese mismo commit.**
    **Acción requerida**.
 6. Nunca escribas secretos (tokens, claves, contenido de `.env` o
    `config.json`) ni matrículas en el registro.
+7. Siempre trabajar en una rama que no sea main, una vez hechos los cambios, abrir el PR y dejarlo para que otro miembro del equipo lo revise
 
 Si un cambio no pasa por un commit (por ejemplo, solo se editó un `.env`
 local), no va en el registro.

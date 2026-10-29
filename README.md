@@ -113,6 +113,8 @@ ParkEx/
 | Documento | Contenido |
 |---|---|
 | [docs/DISENO.md](docs/DISENO.md) | Arquitectura, decisiones de diseño, modelo de datos, API, seguridad, hardware, plan de fases y riesgos |
+| [CAMBIOS.md](CAMBIOS.md) | Registro de cambios: qué se hizo en cada commit y qué quedó pendiente |
+| [AGENTS.md](AGENTS.md) | Instrucciones para asistentes de IA que trabajen sobre el repo |
 
 ## Estado
 

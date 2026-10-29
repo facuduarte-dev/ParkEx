@@ -45,7 +45,7 @@ git status
 git add .
 git commit -m "Descripción clara del trabajo realizado"
 ```
-Los mensajes de commit van en español, sin prefijos como `feat:`.
+Los mensajes de commit van en español, con prefijos si se prefiere como `feat:`.
 
 ### Paso 6: Publicar la rama en GitHub
 ```bash

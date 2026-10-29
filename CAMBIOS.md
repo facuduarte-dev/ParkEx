@@ -67,3 +67,9 @@ código que no se usa en la etapa actual.
   sea privado de verdad hay que pasarlo a privado en GitHub.
 - Conviene desactivar el registro público de cuentas en Supabase
   (Authentication → Sign In / Providers).
+
+
+
+## 2026-10-29 — Creacion de archivo FLUJO.md
+
+Se creo archivo FLUJO.md para entender como trabajar en el repositorio. Esta explicado como crear una rama, de que forma, y como colgar el PR

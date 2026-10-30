@@ -23,6 +23,22 @@ ni matrículas.
 
 ---
 
+## 2026-10-29 — Guía del flujo de trabajo con ramas (FLUJO.md)
+
+**Autor:** Lucio Facchin, con ayuda de Claude
+
+- docs: se agregó `FLUJO.md`, una guía de cómo trabajar en el repositorio:
+  crear una rama desde `main` actualizada, anotar el cambio en `CAMBIOS.md`,
+  commitear, publicar la rama con `git push -u` y abrir el Pull Request. Hace
+  falta porque `AGENTS.md` ahora exige trabajar siempre fuera de `main` y que
+  otra persona revise el PR.
+- docs: la guía cubre también qué hacer si se empezó a trabajar en `main` por
+  error (cambios sin commitear, commits sin push, o push ya hecho) y dos formas
+  de abrir el PR (web de GitHub o `gh pr create`). Aclara que el merge lo hace
+  quien revisa, no quien abre el PR.
+- docs: esta entrada reemplaza una anterior sobre `FLUJO.md` que había quedado
+  al final del archivo y sin autor.
+
 ## 2026-10-28 — Repositorio cerrado a terceros y limpieza de código
 
 **Autor:** Lucio Facchin, con ayuda de Claude
